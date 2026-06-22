@@ -1,0 +1,29 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "sentinel-mcp-server"
+version = "0.1.0"
+description = "Shopee 运营哨兵 MCP Server — 让 AI Agent 接入竞品价格监控"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+keywords = ["mcp", "shopee", "price-monitoring", "sentinel"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "mcp>=1.0.0",
+    "httpx>=0.27.0",
+]
+
+[project.scripts]
+sentinel-mcp-server = "sentinel_mcp.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sentinel_mcp"]
