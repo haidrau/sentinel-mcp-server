@@ -80,7 +80,7 @@ mcp_servers:
     command: python
     args: ["-m", "sentinel_mcp.server"]
     env:
-      SENTINEL_API_BASE: "https://api.gf-yun.cn/api/v1"
+      SENTINEL_API_BASE: "https://priceminder.online/api/v1"
       SENTINEL_TOKEN: "你的token"
     enabled: true
 ```
@@ -103,7 +103,7 @@ mcp_servers:
     command: uvx
     args: ["sentinel-mcp-server"]
     env:
-      SENTINEL_API_BASE: "https://api.gf-yun.cn/api/v1"
+      SENTINEL_API_BASE: "https://priceminder.online/api/v1"
       SENTINEL_TOKEN: "你的token"
     enabled: true
 ```
@@ -294,7 +294,7 @@ mcp_servers:
     command: python
     args: ["-m", "sentinel_mcp.server"]
     env:
-      SENTINEL_API_BASE: "https://api.gf-yun.cn/api/v1"
+      SENTINEL_API_BASE: "https://priceminder.online/api/v1"
       SENTINEL_TOKEN: "你的token"
     enabled: true
     # 只暴露查询类工具，隐藏操作类

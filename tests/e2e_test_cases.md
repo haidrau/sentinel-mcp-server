@@ -3,7 +3,7 @@
 > 日期：2026-06-22
 > 前置条件：帆帆已部署 API 改动 + 落地页
 > Token：替换下方 `{TOKEN}` 为你的实际 token（如 `9df2b0b5-f720-40f5-9f44-618dc68e093f`）
-> API Base：`https://api.gf-yun.cn/api/v1`
+> API Base：`https://priceminder.online/api/v1`
 
 ---
 
@@ -16,7 +16,7 @@
 **输入**：
 ```bash
 curl -s -H "X-Sentinel-Token: {TOKEN}" \
-  "https://api.gf-yun.cn/api/v1/price/summary?days=3"
+  "https://priceminder.online/api/v1/price/summary?days=3"
 ```
 
 **预期输出**（关键字段）：
@@ -60,7 +60,7 @@ curl -s -H "X-Sentinel-Token: {TOKEN}" \
 **输入**：
 ```bash
 curl -s -H "X-Sentinel-Token: {TOKEN}" \
-  "https://api.gf-yun.cn/api/v1/alerts?size=3"
+  "https://priceminder.online/api/v1/alerts?size=3"
 ```
 
 **预期输出**（关键字段）：
@@ -107,11 +107,11 @@ curl -s -H "X-Sentinel-Token: {TOKEN}" \
 ```bash
 # 先查全量，确认有数据
 curl -s -H "X-Sentinel-Token: {TOKEN}" \
-  "https://api.gf-yun.cn/api/v1/monitors?size=5"
+  "https://priceminder.online/api/v1/monitors?size=5"
 
 # 再用 keyword 搜索（替换为你实际的商品名关键词）
 curl -s -H "X-Sentinel-Token: {TOKEN}" \
-  "https://api.gf-yun.cn/api/v1/monitors?keyword=iPhone"
+  "https://priceminder.online/api/v1/monitors?keyword=iPhone"
 ```
 
 **预期输出**：
@@ -147,7 +147,7 @@ curl -s -H "X-Sentinel-Token: {TOKEN}" \
 **输入**：
 ```bash
 curl -s -H "X-Sentinel-Token: {TOKEN}" \
-  "https://api.gf-yun.cn/api/v1/user/dashboard"
+  "https://priceminder.online/api/v1/user/dashboard"
 ```
 
 **预期输出**：
@@ -185,7 +185,7 @@ curl -s -H "X-Sentinel-Token: {TOKEN}" \
 ```bash
 cd E:\99--Code\0-QoderWork\sentinel-mcp-server
 pip install -e .
-set SENTINEL_API_BASE=https://api.gf-yun.cn/api/v1
+set SENTINEL_API_BASE=https://priceminder.online/api/v1
 set SENTINEL_TOKEN={TOKEN}
 ```
 
@@ -502,7 +502,7 @@ print(result)
 
 ### E2E-16: 落地页访问
 
-**输入**：浏览器访问 `https://www.gf-yun.cn/priceminder/mcp/`
+**输入**：浏览器访问 `https://priceminder.online/priceminder/mcp/`
 
 **验证点**：
 - [ ] 页面正常渲染，无白屏

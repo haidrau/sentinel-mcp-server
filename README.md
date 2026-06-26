@@ -23,7 +23,7 @@ Shopee 运营哨兵 MCP Server — 让 AI Agent 接入竞品价格监控
 sentinel-mcp-server  ← 用户本地运行（pip install）
     │ HTTP + X-Sentinel-Token
     ▼
-Sentinel REST API    ← 帆帆部署的服务器 (api.gf-yun.cn)
+Sentinel REST API    ← 帆帆部署的服务器 (priceminder.online)
     │
     ▼
 PostgreSQL DB
@@ -62,19 +62,19 @@ sudo supervisorctl restart sentinel-api
 # 3. 验证新端点
 # 批量摘要（不传 monitor_id）
 curl -s -H "X-Sentinel-Token: 你的token" \
-  "https://api.gf-yun.cn/api/v1/price/summary?days=3" | python -m json.tool
+  "https://priceminder.online/api/v1/price/summary?days=3" | python -m json.tool
 
 # alerts enriched 字段
 curl -s -H "X-Sentinel-Token: 你的token" \
-  "https://api.gf-yun.cn/api/v1/alerts?size=3" | python -m json.tool
+  "https://priceminder.online/api/v1/alerts?size=3" | python -m json.tool
 
 # keyword 搜索
 curl -s -H "X-Sentinel-Token: 你的token" \
-  "https://api.gf-yun.cn/api/v1/monitors?keyword=iPhone" | python -m json.tool
+  "https://priceminder.online/api/v1/monitors?keyword=iPhone" | python -m json.tool
 
 # user dashboard
 curl -s -H "X-Sentinel-Token: 你的token" \
-  "https://api.gf-yun.cn/api/v1/user/dashboard" | python -m json.tool
+  "https://priceminder.online/api/v1/user/dashboard" | python -m json.tool
 ```
 
 ### 2.2 落地页部署
@@ -96,7 +96,7 @@ sudo cp docs/index.html /usr/share/nginx/html/priceminder/mcp/index.html
 # 或者根据你的 Nginx 配置调整路径
 
 # 3. 验证
-# 浏览器访问: https://www.gf-yun.cn/priceminder/mcp/
+# 浏览器访问: https://priceminder.online/priceminder/mcp/
 ```
 
 **Nginx 配置参考**（如果需要新增 location）：
@@ -186,7 +186,7 @@ sentinel-mcp-server/
       "command": "uvx",
       "args": ["sentinel-mcp-server"],
       "env": {
-        "SENTINEL_API_BASE": "https://api.gf-yun.cn/api/v1",
+        "SENTINEL_API_BASE": "https://priceminder.online/api/v1",
         "SENTINEL_TOKEN": "用户的 API Token"
       }
     }
@@ -202,7 +202,7 @@ sentinel-mcp-server/
 
 | 变量 | 说明 | 默认值 |
 |------|------|--------|
-| `SENTINEL_API_BASE` | Sentinel REST API 地址 | `https://api.gf-yun.cn/api/v1` |
+| `SENTINEL_API_BASE` | Sentinel REST API 地址 | `https://priceminder.online/api/v1` |
 | `SENTINEL_TOKEN` | 用户认证 Token（必填） | — |
 | `SENTINEL_TIMEOUT` | HTTP 请求超时（秒） | `30` |
 
@@ -237,24 +237,24 @@ python -c "from sentinel_mcp.server import TOOLS; print([t.name for t in TOOLS])
 ```bash
 # 批量摘要（关键：不传 monitor_id，应返回 items 数组）
 curl -s -H "X-Sentinel-Token: 你的token" \
-  "https://api.gf-yun.cn/api/v1/price/summary?days=3"
+  "https://priceminder.online/api/v1/price/summary?days=3"
 
 # alerts 应有 product_name 等字段
 curl -s -H "X-Sentinel-Token: 你的token" \
-  "https://api.gf-yun.cn/api/v1/alerts?size=2"
+  "https://priceminder.online/api/v1/alerts?size=2"
 
 # keyword 搜索
 curl -s -H "X-Sentinel-Token: 你的token" \
-  "https://api.gf-yun.cn/api/v1/monitors?keyword=test"
+  "https://priceminder.online/api/v1/monitors?keyword=test"
 
 # user dashboard（新端点）
 curl -s -H "X-Sentinel-Token: 你的token" \
-  "https://api.gf-yun.cn/api/v1/user/dashboard"
+  "https://priceminder.online/api/v1/user/dashboard"
 ```
 
 ### Step 2: 验证落地页
 
-浏览器访问 `https://www.gf-yun.cn/priceminder/mcp/`，确认页面正常渲染。
+浏览器访问 `https://priceminder.online/priceminder/mcp/`，确认页面正常渲染。
 
 ### Step 3: 端到端 MCP 测试
 
