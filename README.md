@@ -89,7 +89,7 @@ cd /path/to/sentinel-mcp-server
 git pull origin master
 
 # 2. 将 docs/ 目录复制到 Nginx 静态文件目录
-# 假设 Panel 已经在 Nginx 的 /priceminder/panel/ 下
+# 假设 Panel 已经在 Nginx 的 /panel/ 下
 # MCP 落地页建议放在 /priceminder/mcp/ 路径下
 
 sudo cp docs/index.html /usr/share/nginx/html/priceminder/mcp/index.html
