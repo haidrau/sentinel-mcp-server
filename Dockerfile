@@ -2,12 +2,12 @@ FROM m.daocloud.io/docker.io/library/python:3.12-slim
 
 WORKDIR /app
 
-# 安装依赖（先复制 pyproject.toml 和 README.md 安装依赖，利用 docker 层缓存）
+# 复制全部源码（pip install 需要 src/ 目录）
 COPY pyproject.toml README.md ./
-RUN pip install --no-cache-dir -i https://mirrors.aliyun.com/pypi/simple/ .
-
-# 复制源码
 COPY src/ ./src/
+
+# 安装依赖
+RUN pip install --no-cache-dir -i https://mirrors.aliyun.com/pypi/simple/ .
 
 # 环境变量（通过 docker run --env-file 或 docker-compose 注入）
 ENV SENTINEL_API_BASE=https://priceminder.online/shopee
