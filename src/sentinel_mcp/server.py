@@ -4,6 +4,10 @@ Shopee 运营哨兵 MCP Server
 将 Sentinel REST API 封装为 MCP (Model Context Protocol) Tools，
 让 AI Agent 通过自然语言调用价格监控能力。
 
+支持两种运行模式：
+  - stdio 模式：本地安装，通过标准输入/输出与 AI 客户端通信
+  - http  模式：托管部署，暴露 Streamable HTTP 端点，用户通过 URL+Key 接入
+
 10 个 Tool:
   Tier 1 (查询): get_monitor_list, get_price_summary, get_price_history, get_alerts
   Tier 2 (操作): add_monitor, update_monitor_status, mark_alert_read
@@ -12,8 +16,11 @@ Shopee 运营哨兵 MCP Server
 
 from __future__ import annotations
 
+import argparse
 import asyncio
+import contextvars
 import logging
+import sys
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
@@ -22,8 +29,18 @@ from mcp.types import Tool, TextContent
 from sentinel_mcp import config
 from sentinel_mcp.tools import monitors, prices, alerts, insights
 
+# ── 日志 ──────────────────────────────────────────────
+logging.basicConfig(
+    level=getattr(logging, config.LOG_LEVEL, logging.INFO),
+    format="%(asctime)s [%(name)s] %(levelname)s: %(message)s",
+    stream=sys.stderr,
+)
 logger = logging.getLogger("sentinel-mcp")
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
+
+# ── 请求级上下文：当前正在执行的 Tool 名称（供 api_client 上报日志） ──
+_current_tool_name: contextvars.ContextVar[str] = contextvars.ContextVar(
+    "current_tool_name", default=""
+)
 
 app = Server("sentinel-mcp-server")
 
@@ -249,12 +266,15 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
     if not handler:
         return [TextContent(type="text", text=f"未知工具: {name}")]
 
-    # 验证 token
-    if not config.TOKEN:
+    # stdio 模式下检查 TOKEN（HTTP 模式由 auth 中间件保证）
+    if config.MODE == "stdio" and not config.TOKEN:
         return [TextContent(
             type="text",
             text="错误: SENTINEL_TOKEN 环境变量未设置。请在 MCP 配置中设置你的 API Token。",
         )]
+
+    # 设置当前 tool 名称（供 api_client 上报日志）
+    _current_tool_name.set(name)
 
     try:
         result = await handler(**arguments)
@@ -265,12 +285,12 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
 
 
 # ──────────────────────────────────────────────────────────
-# 入口
+# 启动模式
 # ──────────────────────────────────────────────────────────
 
-def main():
-    """以 stdio 模式启动 MCP Server"""
-    logger.info("Sentinel MCP Server 启动中 (API: %s)", config.API_BASE)
+def run_stdio():
+    """以 stdio 模式启动 MCP Server（本地安装模式）"""
+    logger.info("Sentinel MCP Server 启动 [stdio 模式] (API: %s)", config.API_BASE)
     if not config.TOKEN:
         logger.warning("SENTINEL_TOKEN 未设置，Tool 调用将返回错误提示")
 
@@ -279,6 +299,47 @@ def main():
             await app.run(read_stream, write_stream, app.create_initialization_options())
 
     asyncio.run(_run())
+
+
+def run_http():
+    """以 Streamable HTTP 模式启动 MCP Server（托管部署模式）"""
+    import uvicorn
+    from sentinel_mcp.auth import AuthMiddleware
+
+    logger.info(
+        "Sentinel MCP Server 启动 [HTTP 模式] (API: %s, Listen: %s:%d)",
+        config.API_BASE, config.HOST, config.PORT,
+    )
+
+    # 使用 MCP SDK 内置的 Streamable HTTP ASGI app
+    mcp_asgi_app = app.streamable_http_app()
+
+    # 包裹认证中间件
+    wrapped_app = AuthMiddleware(mcp_asgi_app)
+
+    uvicorn.run(
+        wrapped_app,
+        host=config.HOST,
+        port=config.PORT,
+        log_level=config.LOG_LEVEL.lower(),
+    )
+
+
+def main():
+    """入口函数：根据命令行参数或环境变量选择运行模式"""
+    parser = argparse.ArgumentParser(description="Shopee 运营哨兵 MCP Server")
+    parser.add_argument(
+        "--mode",
+        choices=["stdio", "http"],
+        default=config.MODE,
+        help="运行模式：stdio（本地）或 http（托管）。默认从 SENTINEL_MCP_MODE 环境变量读取。",
+    )
+    args = parser.parse_args()
+
+    if args.mode == "http":
+        run_http()
+    else:
+        run_stdio()
 
 
 if __name__ == "__main__":
