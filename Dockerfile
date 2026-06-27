@@ -4,7 +4,7 @@ WORKDIR /app
 
 # 安装依赖（先复制 pyproject.toml 和 README.md 安装依赖，利用 docker 层缓存）
 COPY pyproject.toml README.md ./
-RUN pip install --no-cache-dir .
+RUN pip install --no-cache-dir -i https://mirrors.aliyun.com/pypi/simple/ .
 
 # 复制源码
 COPY src/ ./src/
