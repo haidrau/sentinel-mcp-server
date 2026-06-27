@@ -22,10 +22,6 @@ import contextvars
 import logging
 import sys
 
-from mcp.server import Server
-from mcp.server.stdio import stdio_server
-from mcp.types import Tool, TextContent
-
 from sentinel_mcp import config
 from sentinel_mcp.tools import monitors, prices, alerts, insights
 
@@ -42,251 +38,170 @@ _current_tool_name: contextvars.ContextVar[str] = contextvars.ContextVar(
     "current_tool_name", default=""
 )
 
-app = Server("sentinel-mcp-server")
-
 
 # ──────────────────────────────────────────────────────────
-# Tool 注册表
+# MCP Server (FastMCP)
 # ──────────────────────────────────────────────────────────
+from mcp.server.fastmcp import FastMCP
 
-TOOLS: list[Tool] = [
-    # Tier 1 — 查询
-    Tool(
-        name="get_monitor_list",
-        description=monitors.MONITOR_LIST_DESCRIPTION,
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "site": {
-                    "type": "string",
-                    "description": "站点筛选，可选值：sg, my, th, vn。不传则返回全部站点",
-                    "enum": ["sg", "my", "th", "vn"],
-                },
-                "status": {
-                    "type": "string",
-                    "description": "状态筛选，默认 active",
-                    "enum": ["active", "paused"],
-                },
-            },
-            "required": [],
-        },
-    ),
-    Tool(
-        name="get_price_summary",
-        description=prices.PRICE_SUMMARY_DESCRIPTION,
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "monitor_id": {
-                    "type": "integer",
-                    "description": "监控项 ID。不传则返回所有活跃监控的摘要",
-                },
-                "site": {
-                    "type": "string",
-                    "description": "站点筛选（当 monitor_id 不传时生效）",
-                    "enum": ["sg", "my", "th", "vn"],
-                },
-                "days": {
-                    "type": "integer",
-                    "description": "查询最近 N 天的数据",
-                    "default": 3,
-                    "minimum": 1,
-                    "maximum": 30,
-                },
-            },
-            "required": [],
-        },
-    ),
-    Tool(
-        name="get_price_history",
-        description=prices.PRICE_HISTORY_DESCRIPTION,
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "monitor_id": {
-                    "type": "integer",
-                    "description": "监控项 ID（必填）",
-                },
-                "days": {
-                    "type": "integer",
-                    "description": "查询最近 N 天的数据",
-                    "default": 7,
-                    "minimum": 1,
-                    "maximum": 90,
-                },
-            },
-            "required": ["monitor_id"],
-        },
-    ),
-    Tool(
-        name="get_alerts",
-        description=alerts.GET_ALERTS_DESCRIPTION,
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "unread_only": {
-                    "type": "boolean",
-                    "description": "只返回未读预警",
-                    "default": False,
-                },
-                "site": {
-                    "type": "string",
-                    "description": "站点筛选",
-                    "enum": ["sg", "my", "th", "vn"],
-                },
-                "limit": {
-                    "type": "integer",
-                    "description": "返回条数上限",
-                    "default": 10,
-                    "maximum": 50,
-                },
-            },
-            "required": [],
-        },
-    ),
-
-    # Tier 2 — 操作
-    Tool(
-        name="add_monitor",
-        description=monitors.ADD_MONITOR_DESCRIPTION,
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "product_url": {
-                    "type": "string",
-                    "description": "Shopee 商品页面 URL（必填）",
-                },
-                "alert_threshold": {
-                    "type": "integer",
-                    "description": "降价预警阈值（百分比），默认 5",
-                    "default": 5,
-                    "minimum": 1,
-                    "maximum": 50,
-                },
-            },
-            "required": ["product_url"],
-        },
-    ),
-    Tool(
-        name="update_monitor_status",
-        description=monitors.UPDATE_STATUS_DESCRIPTION,
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "monitor_id": {
-                    "type": "integer",
-                    "description": "监控项 ID（必填）",
-                },
-                "status": {
-                    "type": "string",
-                    "description": "目标状态：'paused'（暂停）或 'active'（恢复）",
-                    "enum": ["active", "paused"],
-                },
-            },
-            "required": ["monitor_id", "status"],
-        },
-    ),
-    Tool(
-        name="mark_alert_read",
-        description=alerts.MARK_READ_DESCRIPTION,
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "alert_id": {
-                    "type": "integer",
-                    "description": "预警记录 ID（必填）",
-                },
-            },
-            "required": ["alert_id"],
-        },
-    ),
-
-    # Tier 3 — 洞察
-    Tool(
-        name="get_crawl_health",
-        description=insights.CRAWL_HEALTH_DESCRIPTION,
-        inputSchema={
-            "type": "object",
-            "properties": {},
-            "required": [],
-        },
-    ),
-    Tool(
-        name="get_monitor_overview",
-        description=insights.MONITOR_OVERVIEW_DESCRIPTION,
-        inputSchema={
-            "type": "object",
-            "properties": {},
-            "required": [],
-        },
-    ),
-    Tool(
-        name="search_my_products",
-        description=monitors.SEARCH_PRODUCTS_DESCRIPTION,
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "keyword": {
-                    "type": "string",
-                    "description": "搜索关键词，匹配商品名或店铺名（必填）",
-                },
-            },
-            "required": ["keyword"],
-        },
-    ),
-]
-
-# Tool name → handler 映射
-_HANDLERS = {
-    "get_monitor_list": monitors.get_monitor_list,
-    "get_price_summary": prices.get_price_summary,
-    "get_price_history": prices.get_price_history,
-    "get_alerts": alerts.get_alerts,
-    "add_monitor": monitors.add_monitor,
-    "update_monitor_status": monitors.update_monitor_status,
-    "mark_alert_read": alerts.mark_alert_read,
-    "get_crawl_health": insights.get_crawl_health,
-    "get_monitor_overview": insights.get_monitor_overview,
-    "search_my_products": monitors.search_my_products,
-}
+mcp = FastMCP("sentinel-mcp-server")
 
 
-# ──────────────────────────────────────────────────────────
-# MCP Server Handlers
-# ──────────────────────────────────────────────────────────
-
-@app.list_tools()
-async def list_tools() -> list[Tool]:
-    return TOOLS
+# ── Tool 注册 ─────────────────────────────────────────────
 
 
-@app.call_tool()
-async def call_tool(name: str, arguments: dict) -> list[TextContent]:
-    handler = _HANDLERS.get(name)
-    if not handler:
-        return [TextContent(type="text", text=f"未知工具: {name}")]
+@mcp.tool(
+    name="get_monitor_list",
+    description=monitors.MONITOR_LIST_DESCRIPTION,
+)
+async def get_monitor_list(
+    site: str | None = None,
+    status: str = "active",
+) -> str:
+    """获取监控列表"""
+    return await monitors.get_monitor_list(site=site, status=status)
 
-    # stdio 模式下检查 TOKEN（HTTP 模式由 auth 中间件保证）
-    if config.MODE == "stdio" and not config.TOKEN:
-        return [TextContent(
-            type="text",
-            text="错误: SENTINEL_TOKEN 环境变量未设置。请在 MCP 配置中设置你的 API Token。",
-        )]
 
-    # 设置当前 tool 名称（供 api_client 上报日志）
-    _current_tool_name.set(name)
+@mcp.tool(
+    name="get_price_summary",
+    description=prices.PRICE_SUMMARY_DESCRIPTION,
+)
+async def get_price_summary(
+    monitor_id: int | None = None,
+    site: str | None = None,
+    days: int = 3,
+) -> str:
+    """价格摘要（支持批量）"""
+    kwargs = {"days": days}
+    if monitor_id is not None:
+        kwargs["monitor_id"] = monitor_id
+    if site is not None:
+        kwargs["site"] = site
+    return await prices.get_price_summary(**kwargs)
 
-    try:
-        result = await handler(**arguments)
-        return [TextContent(type="text", text=result)]
-    except Exception as e:
-        logger.exception(f"Tool {name} 调用失败")
-        return [TextContent(type="text", text=f"调用 {name} 时出错: {e}")]
+
+@mcp.tool(
+    name="get_price_history",
+    description=prices.PRICE_HISTORY_DESCRIPTION,
+)
+async def get_price_history(
+    monitor_id: int,
+    days: int = 7,
+) -> str:
+    """价格时间序列"""
+    return await prices.get_price_history(monitor_id=monitor_id, days=days)
+
+
+@mcp.tool(
+    name="get_alerts",
+    description=alerts.GET_ALERTS_DESCRIPTION,
+)
+async def get_alerts(
+    unread_only: bool = False,
+    site: str | None = None,
+    limit: int = 10,
+) -> str:
+    """预警列表"""
+    kwargs = {"limit": limit, "unread_only": unread_only}
+    if site is not None:
+        kwargs["site"] = site
+    return await alerts.get_alerts(**kwargs)
+
+
+@mcp.tool(
+    name="add_monitor",
+    description=monitors.ADD_MONITOR_DESCRIPTION,
+)
+async def add_monitor(
+    product_url: str,
+    product_name: str = "",
+    shop_name: str = "",
+    site: str = "",
+    currency: str = "",
+    base_price: float | None = None,
+    check_interval: int = 120,
+    alert_threshold: int = 5,
+) -> str:
+    """添加监控"""
+    return await monitors.add_monitor(
+        product_url=product_url,
+        product_name=product_name,
+        shop_name=shop_name,
+        site=site,
+        currency=currency,
+        base_price=base_price,
+        check_interval=check_interval,
+        alert_threshold=alert_threshold,
+    )
+
+
+@mcp.tool(
+    name="update_monitor_status",
+    description=monitors.UPDATE_STATUS_DESCRIPTION,
+)
+async def update_monitor_status(
+    monitor_id: int,
+    status: str,
+) -> str:
+    """暂停/恢复监控"""
+    return await monitors.update_monitor_status(
+        monitor_id=monitor_id, status=status
+    )
+
+
+@mcp.tool(
+    name="mark_alert_read",
+    description=alerts.MARK_READ_DESCRIPTION,
+)
+async def mark_alert_read(
+    alert_id: int,
+) -> str:
+    """标记预警已读"""
+    return await alerts.mark_alert_read(alert_id=alert_id)
+
+
+@mcp.tool(
+    name="get_crawl_health",
+    description=insights.CRAWL_HEALTH_DESCRIPTION,
+)
+async def get_crawl_health() -> str:
+    """采集健康度"""
+    return await insights.get_crawl_health()
+
+
+@mcp.tool(
+    name="get_monitor_overview",
+    description=insights.MONITOR_OVERVIEW_DESCRIPTION,
+)
+async def get_monitor_overview() -> str:
+    """监控大盘"""
+    return await insights.get_monitor_overview()
+
+
+@mcp.tool(
+    name="search_my_products",
+    description=monitors.SEARCH_PRODUCTS_DESCRIPTION,
+)
+async def search_my_products(
+    keyword: str,
+) -> str:
+    """搜索监控"""
+    return await monitors.search_my_products(keyword=keyword)
+
+
+# ── 上下文钩子：在每次 Tool 调用时设置当前 tool 名称 ──
+
+
+@mcp.tool()
+async def _tool_context_hook():
+    """内部使用：运行时上下文"""
+    pass
 
 
 # ──────────────────────────────────────────────────────────
 # 启动模式
 # ──────────────────────────────────────────────────────────
+
 
 def run_stdio():
     """以 stdio 模式启动 MCP Server（本地安装模式）"""
@@ -294,16 +209,12 @@ def run_stdio():
     if not config.TOKEN:
         logger.warning("SENTINEL_TOKEN 未设置，Tool 调用将返回错误提示")
 
-    async def _run():
-        async with stdio_server() as (read_stream, write_stream):
-            await app.run(read_stream, write_stream, app.create_initialization_options())
-
-    asyncio.run(_run())
+    # FastMCP 的 run() 支持 stdio 传输
+    mcp.run(transport="stdio")
 
 
 def run_http():
     """以 Streamable HTTP 模式启动 MCP Server（托管部署模式）"""
-    import uvicorn
     from sentinel_mcp.auth import AuthMiddleware
 
     logger.info(
@@ -311,12 +222,13 @@ def run_http():
         config.API_BASE, config.HOST, config.PORT,
     )
 
-    # 使用 MCP SDK 内置的 Streamable HTTP ASGI app
-    mcp_asgi_app = app.streamable_http_app()
+    # FastMCP 提供 streamable_http_app() → ASGI Starlette app
+    mcp_asgi_app = mcp.streamable_http_app()
 
     # 包裹认证中间件
     wrapped_app = AuthMiddleware(mcp_asgi_app)
 
+    import uvicorn
     uvicorn.run(
         wrapped_app,
         host=config.HOST,
@@ -332,7 +244,7 @@ def main():
         "--mode",
         choices=["stdio", "http"],
         default=config.MODE,
-        help="运行模式：stdio（本地）或 http（托管）。默认从 SENTINEL_MCP_MODE 环境变量读取。",
+        help="运行模式：stdio（本地）或 http（托管）。默认从 MCP_MODE 环境变量读取。",
     )
     args = parser.parse_args()
 
