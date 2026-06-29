@@ -104,10 +104,28 @@ async def _log_usage(tool_name: str, status: str, start_time: float,
         logger.debug("Usage log failed (non-critical): %s", e)
 
 
+def _log_req(method: str, path: str, params: dict | None = None):
+    """记录 API 请求"""
+    extra = f" params={params}" if params else ""
+    logger.info("→ [API] %s %s%s", method, path, extra)
+
+
+def _log_resp(method: str, path: str, dur_ms: int, code, data_preview: str = ""):
+    """记录 API 响应"""
+    preview = f" | {data_preview}" if data_preview else ""
+    logger.info("← [API] %s %s (%dms, code=%s)%s", method, path, dur_ms, code, preview)
+
+
+def _log_err(method: str, path: str, dur_ms: int, err: Exception):
+    """记录 API 错误"""
+    logger.warning("✕ [API] %s %s (%dms) → %s", method, path, dur_ms, err)
+
+
 async def get(path: str, params: dict | None = None, *, _tool_name: str = "") -> dict:
     """发送 GET 请求并返回 data 字段"""
     start = time.time()
     tool = _resolve_tool_name(_tool_name)
+    _log_req("GET", path, params)
     try:
         async with httpx.AsyncClient(timeout=config.TIMEOUT) as client:
             resp = await client.get(f"{_base()}{path}", headers=_headers(), params=params)
@@ -116,10 +134,15 @@ async def get(path: str, params: dict | None = None, *, _tool_name: str = "") ->
         if body.get("code") and body["code"] != 0:
             raise SentinelAPIError(body["code"], body.get("message", "unknown"))
         result = body.get("data", body)
+        dur = int((time.time() - start) * 1000)
+        data_preview = str(result)[:120] if isinstance(result, dict) else ""
+        _log_resp("GET", path, dur, body.get("code", "N/A"), data_preview)
         if tool:
             await _log_usage(tool, "success", start)
         return result
     except Exception as e:
+        dur = int((time.time() - start) * 1000)
+        _log_err("GET", path, dur, e)
         if tool:
             await _log_usage(tool, "error", start, str(e)[:200])
         raise
@@ -129,6 +152,7 @@ async def post(path: str, json_body: dict | None = None, *, _tool_name: str = ""
     """发送 POST 请求并返回 data 字段"""
     start = time.time()
     tool = _resolve_tool_name(_tool_name)
+    _log_req("POST", path)
     try:
         async with httpx.AsyncClient(timeout=config.TIMEOUT) as client:
             resp = await client.post(
@@ -139,10 +163,15 @@ async def post(path: str, json_body: dict | None = None, *, _tool_name: str = ""
         if body.get("code") and body["code"] != 0:
             raise SentinelAPIError(body["code"], body.get("message", "unknown"))
         result = body.get("data", body)
+        dur = int((time.time() - start) * 1000)
+        data_preview = str(result)[:120] if isinstance(result, dict) else ""
+        _log_resp("POST", path, dur, body.get("code", "N/A"), data_preview)
         if tool:
             await _log_usage(tool, "success", start)
         return result
     except Exception as e:
+        dur = int((time.time() - start) * 1000)
+        _log_err("POST", path, dur, e)
         if tool:
             await _log_usage(tool, "error", start, str(e)[:200])
         raise
@@ -152,6 +181,7 @@ async def put(path: str, json_body: dict | None = None, *, _tool_name: str = "")
     """发送 PUT 请求并返回 data 字段"""
     start = time.time()
     tool = _resolve_tool_name(_tool_name)
+    _log_req("PUT", path)
     try:
         async with httpx.AsyncClient(timeout=config.TIMEOUT) as client:
             resp = await client.put(
@@ -162,10 +192,15 @@ async def put(path: str, json_body: dict | None = None, *, _tool_name: str = "")
         if body.get("code") and body["code"] != 0:
             raise SentinelAPIError(body["code"], body.get("message", "unknown"))
         result = body.get("data", body)
+        dur = int((time.time() - start) * 1000)
+        data_preview = str(result)[:120] if isinstance(result, dict) else ""
+        _log_resp("PUT", path, dur, body.get("code", "N/A"), data_preview)
         if tool:
             await _log_usage(tool, "success", start)
         return result
     except Exception as e:
+        dur = int((time.time() - start) * 1000)
+        _log_err("PUT", path, dur, e)
         if tool:
             await _log_usage(tool, "error", start, str(e)[:200])
         raise
@@ -175,6 +210,7 @@ async def patch(path: str, json_body: dict | None = None, *, _tool_name: str = "
     """发送 PATCH 请求并返回 data 字段"""
     start = time.time()
     tool = _resolve_tool_name(_tool_name)
+    _log_req("PATCH", path)
     try:
         async with httpx.AsyncClient(timeout=config.TIMEOUT) as client:
             resp = await client.patch(
@@ -185,10 +221,15 @@ async def patch(path: str, json_body: dict | None = None, *, _tool_name: str = "
         if body.get("code") and body["code"] != 0:
             raise SentinelAPIError(body["code"], body.get("message", "unknown"))
         result = body.get("data", body)
+        dur = int((time.time() - start) * 1000)
+        data_preview = str(result)[:120] if isinstance(result, dict) else ""
+        _log_resp("PATCH", path, dur, body.get("code", "N/A"), data_preview)
         if tool:
             await _log_usage(tool, "success", start)
         return result
     except Exception as e:
+        dur = int((time.time() - start) * 1000)
+        _log_err("PATCH", path, dur, e)
         if tool:
             await _log_usage(tool, "error", start, str(e)[:200])
         raise
@@ -198,6 +239,7 @@ async def delete(path: str, *, _tool_name: str = "") -> dict:
     """发送 DELETE 请求并返回 data 字段"""
     start = time.time()
     tool = _resolve_tool_name(_tool_name)
+    _log_req("DELETE", path)
     try:
         async with httpx.AsyncClient(timeout=config.TIMEOUT) as client:
             resp = await client.delete(f"{_base()}{path}", headers=_headers())
@@ -206,10 +248,15 @@ async def delete(path: str, *, _tool_name: str = "") -> dict:
         if body.get("code") and body["code"] != 0:
             raise SentinelAPIError(body["code"], body.get("message", "unknown"))
         result = body.get("data", body)
+        dur = int((time.time() - start) * 1000)
+        data_preview = str(result)[:120] if isinstance(result, dict) else ""
+        _log_resp("DELETE", path, dur, body.get("code", "N/A"), data_preview)
         if tool:
             await _log_usage(tool, "success", start)
         return result
     except Exception as e:
+        dur = int((time.time() - start) * 1000)
+        _log_err("DELETE", path, dur, e)
         if tool:
             await _log_usage(tool, "error", start, str(e)[:200])
         raise
