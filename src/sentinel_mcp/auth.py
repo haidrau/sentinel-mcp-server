@@ -131,14 +131,9 @@ class AuthMiddleware:
             _user_id_var.set(info["user_id"])
             _mcp_key_var.set(key[:8])
 
-            # GET / 探测：Cherry Studio 等客户端会先发 GET 验证连接
-            if method == "GET" and path == "/":
-                await self._send_probe_ok(send, info)
-                return
-
-            # 路径改写：FastMCP streamable_http_app 把端点挂在 /mcp 而非 /
-            # Cherry Studio 等客户端发的 POST / 需要改写为 POST /mcp
-            if path == "/" and method in ("POST", "PUT", "DELETE"):
+            # 路径改写：FastMCP streamable_http_app(mount_path="/") 把端点挂在 /mcp
+            # Cherry Studio 等客户端请求 / 需改写为 /mcp（含 GET SSE 和 POST）
+            if path == "/":
                 scope["path"] = "/mcp"
 
         await self.app(scope, receive, send)
@@ -163,26 +158,6 @@ class AuthMiddleware:
         """健康检查响应"""
         import json
         body = json.dumps({"status": "ok", "service": "sentinel-mcp"}).encode("utf-8")
-        await send({
-            "type": "http.response.start",
-            "status": 200,
-            "headers": [[b"content-type", b"application/json"]],
-        })
-        await send({
-            "type": "http.response.body",
-            "body": body,
-        })
-
-    @staticmethod
-    async def _send_probe_ok(send, info: dict):
-        """客户端 GET / 探测响应"""
-        import json
-        body = json.dumps({
-            "status": "ok",
-            "service": "sentinel-mcp",
-            "authenticated": True,
-            "user_id": info.get("user_id", ""),
-        }).encode("utf-8")
         await send({
             "type": "http.response.start",
             "status": 200,
