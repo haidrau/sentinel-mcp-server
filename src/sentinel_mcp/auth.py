@@ -103,8 +103,10 @@ class AuthMiddleware:
 
     async def __call__(self, scope, receive, send):
         if scope["type"] == "http":
-            # 健康检查端点：跳过认证
+            method = scope.get("method", "GET")
             path = scope.get("path", "")
+
+            # 健康检查端点：跳过认证
             if path == "/health":
                 await self._send_health(send)
                 return
@@ -127,7 +129,12 @@ class AuthMiddleware:
             # 注入上下文
             _auth_token_var.set(info["token"])
             _user_id_var.set(info["user_id"])
-            _mcp_key_var.set(key[:8])  # 仅保留前缀用于日志
+            _mcp_key_var.set(key[:8])
+
+            # GET / 探测：Cherry Studio 等客户端会先发 GET 验证连接
+            if method == "GET" and path == "/":
+                await self._send_probe_ok(send, info)
+                return
 
         await self.app(scope, receive, send)
 
@@ -151,6 +158,26 @@ class AuthMiddleware:
         """健康检查响应"""
         import json
         body = json.dumps({"status": "ok", "service": "sentinel-mcp"}).encode("utf-8")
+        await send({
+            "type": "http.response.start",
+            "status": 200,
+            "headers": [[b"content-type", b"application/json"]],
+        })
+        await send({
+            "type": "http.response.body",
+            "body": body,
+        })
+
+    @staticmethod
+    async def _send_probe_ok(send, info: dict):
+        """客户端 GET / 探测响应"""
+        import json
+        body = json.dumps({
+            "status": "ok",
+            "service": "sentinel-mcp",
+            "authenticated": True,
+            "user_id": info.get("user_id", ""),
+        }).encode("utf-8")
         await send({
             "type": "http.response.start",
             "status": 200,
