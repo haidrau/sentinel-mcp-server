@@ -28,5 +28,8 @@ MCP_INTERNAL_KEY: str = os.environ.get(
     "sentinel-mcp-internal-2026",
 )
 
+# 后端 API Key（验证 X-Api-Key，与 settings.api_key 对应）
+API_KEY: str = os.environ.get("SENTINEL_API_KEY", "sentinel-mvp-2026")
+
 # 日志级别
 LOG_LEVEL: str = os.environ.get("LOG_LEVEL", "INFO")

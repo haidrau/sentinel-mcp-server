@@ -12,6 +12,7 @@ RUN pip install --no-cache-dir -i https://mirrors.aliyun.com/pypi/simple/ .
 # 环境变量（通过 docker run --env-file 或 docker-compose 注入）
 ENV SENTINEL_API_BASE=https://priceminder.online/shopee
 ENV SENTINEL_MCP_INTERNAL_KEY=sentinel-mcp-internal-2026
+ENV SENTINEL_API_KEY=sentinel-mvp-2026
 ENV MCP_MODE=http
 ENV MCP_HOST=0.0.0.0
 ENV MCP_PORT=8082

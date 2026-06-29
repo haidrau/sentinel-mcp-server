@@ -59,6 +59,7 @@ def _resolve_tool_name(explicit: str) -> str:
 def _headers() -> dict[str, str]:
     return {
         "X-Sentinel-Token": _resolve_token(),
+        "X-Api-Key": config.API_KEY,
         "Content-Type": "application/json",
     }
 
