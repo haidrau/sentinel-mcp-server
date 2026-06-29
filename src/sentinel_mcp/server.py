@@ -43,8 +43,16 @@ _current_tool_name: contextvars.ContextVar[str] = contextvars.ContextVar(
 # MCP Server (FastMCP)
 # ──────────────────────────────────────────────────────────
 from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp.server import TransportSecuritySettings
 
-mcp = FastMCP("sentinel-mcp-server")
+# 关闭 DNS 重绑定保护：MCP Server 在 nginx 反代后面，
+# Host 头为 priceminder.online，默认保护会拒绝非 localhost 请求 (421)
+mcp = FastMCP(
+    "sentinel-mcp-server",
+    transport_security=TransportSecuritySettings(
+        enable_dns_rebinding_protection=False,
+    ),
+)
 
 
 # ── Tool 注册 ─────────────────────────────────────────────
@@ -222,9 +230,9 @@ def run_http():
         config.API_BASE, config.HOST, config.PORT,
     )
 
-    # FastMCP 提供 streamable_http_app() → ASGI Starlette app
-    # 挂载到根路径 /，这样 Cherry Studio 等客户端直接请求即可
-    mcp_asgi_app = mcp.streamable_http_app(mount_path="/")
+    # FastMCP streamable_http_app() → ASGI Starlette app，端点默认 /mcp
+    # AuthMiddleware 会将客户端请求的 / 改写为 /mcp
+    mcp_asgi_app = mcp.streamable_http_app()
 
     # 包裹认证中间件
     wrapped_app = AuthMiddleware(mcp_asgi_app)
