@@ -223,7 +223,8 @@ def run_http():
     )
 
     # FastMCP 提供 streamable_http_app() → ASGI Starlette app
-    mcp_asgi_app = mcp.streamable_http_app()
+    # 挂载到根路径 /，这样 Cherry Studio 等客户端直接请求即可
+    mcp_asgi_app = mcp.streamable_http_app(mount_path="/")
 
     # 包裹认证中间件
     wrapped_app = AuthMiddleware(mcp_asgi_app)

@@ -136,6 +136,11 @@ class AuthMiddleware:
                 await self._send_probe_ok(send, info)
                 return
 
+            # 路径改写：FastMCP streamable_http_app 把端点挂在 /mcp 而非 /
+            # Cherry Studio 等客户端发的 POST / 需要改写为 POST /mcp
+            if path == "/" and method in ("POST", "PUT", "DELETE"):
+                scope["path"] = "/mcp"
+
         await self.app(scope, receive, send)
 
     @staticmethod
