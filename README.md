@@ -3,8 +3,11 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
 [![MCP](https://img.shields.io/badge/MCP-Model%20Context%20Protocol-purple)](https://modelcontextprotocol.io)
+[![Website](https://img.shields.io/badge/Web-priceminder.online-green)](https://priceminder.online)
 
 > **Priceminder** — Real-time Shopee competitor price monitoring, powered by AI agents through the Model Context Protocol (MCP).
+
+🌐 **Sign up free**: [priceminder.online](https://priceminder.online)
 
 Monitor competitor prices across Shopee Southeast Asia (SG, MY, TH, VN). Let your AI agent track, analyze, and alert on price movements — all through natural language.
 
