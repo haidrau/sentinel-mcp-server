@@ -1,4 +1,4 @@
-"""环境变量配置 — 支持 stdio 和 HTTP 两种运行模式"""
+"""Environment config — supports stdio and HTTP run modes"""
 
 import os
 

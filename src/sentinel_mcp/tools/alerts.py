@@ -1,4 +1,4 @@
-"""预警相关 Tools (2 个)
+"""Alert Tools (2)
 
 - get_alerts
 - mark_alert_read
@@ -14,18 +14,18 @@ from sentinel_mcp import api_client
 # ──────────────────────────────────────────────
 
 GET_ALERTS_DESCRIPTION = """\
-获取价格预警列表，查看系统推送过的所有降价预警。支持未读筛选和站点过滤。
+Get price drop alerts — shows all alerts triggered by the system. Supports unread filter and site filter.
 
-用户可能的问法：
-- "有没有新的降价预警"
-- "最近有哪些商品降价了"
-- "未读的预警有几条"
-- "上次推送的那个降价预警是哪个商品"
+Example user queries:
+- "Any new price drop alerts?"
+- "Which products dropped in price recently?"
+- "How many unread alerts do I have?"
+- "Show me the last price drop notification"
 
-可选参数：
-- unread_only: 只返回未读预警（默认 false）
-- site: 按站点筛选
-- limit: 返回条数上限（默认 10，最大 50）
+Optional parameters:
+- unread_only: return only unread alerts (default false)
+- site: filter by site
+- limit: max results (default 10, max 50)
 """
 
 
@@ -91,14 +91,14 @@ async def get_alerts(
 # ──────────────────────────────────────────────
 
 MARK_READ_DESCRIPTION = """\
-将某条预警标记为已读，保持预警列表干净。
+Mark an alert as read to keep the alerts list clean.
 
-用户可能的问法：
-- "把这条预警标记已读"
-- "所有预警都标为已读"
-- "我已经看过那个降价通知了"
+Example user queries:
+- "Mark this alert as read"
+- "Mark all alerts as read"
+- "I've already seen that price drop notification"
 
-需要提供 alert_id（预警记录 ID）。
+Requires alert_id.
 """
 
 

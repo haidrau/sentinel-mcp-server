@@ -1,4 +1,4 @@
-"""运营洞察 Tools (2 个)
+"""Insight Tools (2)
 
 - get_crawl_health
 - get_monitor_overview
@@ -14,20 +14,19 @@ from sentinel_mcp import api_client
 # ──────────────────────────────────────────────
 
 CRAWL_HEALTH_DESCRIPTION = """\
-检查后台采集引擎的运行状态，包括采集次数、各站点采集情况、过期监控检测。
+Check the crawler engine status — total crawls, success rate, per-site stats.
 
-用户可能的问法：
-- "采集系统运行正常吗"
-- "今天采集了多少次"
-- "各站点的采集情况怎样"
-- "有没有监控很久没更新了"
+Example user queries:
+- "Is the crawler system running normally?"
+- "How many crawls today?"
+- "What's the success rate for each site?"
 
-无需参数，直接返回采集系统健康报告。数据范围为当前用户自己的监控商品。
-"""
+No parameters required. Returns a health report.
+No parameters required. Returns a health report.
 
 
 async def get_crawl_health() -> str:
-    """获取采集健康度（从 PriceHistory 统计，按用户隔离）"""
+    """Get crawler health stats (from PriceHistory, per-user isolation)"""
     import asyncio
 
     async def fetch_dashboard():
@@ -112,14 +111,14 @@ async def get_crawl_health() -> str:
 # ──────────────────────────────────────────────
 
 MONITOR_OVERVIEW_DESCRIPTION = """\
-获取所有监控的总览大盘数据，包括活跃监控数、今日采集/预警、各站点分布等。
+Get a dashboard overview of all monitors — active count, today's crawls/alerts, per-site distribution.
 
-用户可能的问法：
-- "给我一个监控总览"
-- "我的所有商品监控情况怎样"
-- "大盘数据看看"
+Example user queries:
+- "Give me a monitor overview"
+- "How are all my monitors doing?"
+- "Show me the dashboard"
 
-无需参数，返回监控大盘摘要。
+No parameters required. Returns a dashboard summary.
 """
 
 

@@ -1,4 +1,4 @@
-"""监控管理相关 Tools (4 个)
+"""Monitor management Tools (4)
 
 - get_monitor_list
 - add_monitor
@@ -18,15 +18,16 @@ from sentinel_mcp import api_client
 # ──────────────────────────────────────────────
 
 MONITOR_LIST_DESCRIPTION = """\
-获取用户正在监控的商品列表。
+Get the list of products the user is currently monitoring.
 
-用户可能的问法：
-- "我在盯哪些商品"
-- "SG 站有几个商品在监控"
-- "我的监控列表"
-- "暂停中的监控有几个"
+Example user queries:
+- "What products am I tracking?"
+- "How many items on SG site?"
+- "Show my monitor list"
+- "How many paused monitors?"
 
-返回监控项数组，每项包含商品名、店铺、站点、基准价、当前价、变动幅度、状态等。
+Returns an array of monitor items with product name, shop, site, base price,
+current price, change percentage, and status.
 """
 
 
@@ -71,14 +72,14 @@ async def get_monitor_list(site: str | None = None, status: str | None = None) -
 # ──────────────────────────────────────────────
 
 ADD_MONITOR_DESCRIPTION = """\
-添加一个新的商品到监控列表。用户需要提供一个 Shopee 商品 URL。
+Add a new product to the monitor list. The user provides a Shopee product URL.
 
-用户可能的问法：
-- "帮我监控这个商品 https://shopee.sg/..."
-- "把这个加到监控列表"
-- "我想盯一下这个竞品的价格"
+Example user queries:
+- "Track this product https://shopee.sg/..."
+- "Add this to my monitor list"
+- "I want to watch this competitor's price"
 
-需要提供 product_url（必填）。可选指定 alert_threshold（降价阈值百分比，默认 5）。
+Requires product_url (required). Optional alert_threshold (price drop %, default 5).
 """
 
 
@@ -118,14 +119,14 @@ async def add_monitor(product_url: str, alert_threshold: int = 5) -> str:
 # ──────────────────────────────────────────────
 
 UPDATE_STATUS_DESCRIPTION = """\
-暂停或恢复某个监控项。
+Pause or resume a monitored product.
 
-用户可能的问法：
-- "先暂停 iPhone 那个监控"
-- "恢复 Samsung 的监控"
-- "把 AirPods 的监控停掉"
+Example user queries:
+- "Pause the iPhone monitor"
+- "Resume monitoring Samsung"
+- "Stop tracking AirPods"
 
-需要提供 monitor_id（监控项 ID）和 status（"paused" 暂停 / "active" 恢复）。
+Requires monitor_id and status ("paused" | "active").
 """
 
 
@@ -147,14 +148,14 @@ async def update_monitor_status(monitor_id: int, status: str) -> str:
 # ──────────────────────────────────────────────
 
 SEARCH_PRODUCTS_DESCRIPTION = """\
-在用户的监控列表中按关键词搜索商品（匹配商品名或店铺名）。
+Search the user's monitor list by keyword (matches product name or shop name).
 
-用户可能的问法：
-- "搜一下我监控里有没有 AirPods"
-- "Samsung 相关的商品有几个在监控"
-- "那个卖耳机的店铺叫什么来着"
+Example user queries:
+- "Search for AirPods in my monitors"
+- "How many Samsung products am I tracking?"
+- "What's the name of that earphone shop?"
 
-需要提供 keyword（搜索关键词）。
+Requires keyword (search term).
 """
 
 

@@ -9,3 +9,11 @@ build/
 .venv/
 venv/
 .env
+01_Screen/
+docs/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store

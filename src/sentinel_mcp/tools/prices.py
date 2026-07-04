@@ -1,4 +1,4 @@
-"""价格数据相关 Tools (2 个)
+"""Price data Tools (2)
 
 - get_price_summary
 - get_price_history
@@ -14,14 +14,16 @@ from sentinel_mcp import api_client
 # ──────────────────────────────────────────────
 
 PRICE_SUMMARY_DESCRIPTION = """\
-获取指定商品或所有活跃监控商品的价格摘要，包括当前价、基准价、最高/最低/均价、趋势方向。
+Get price summary for a specific product or all active monitors,
+including current price, base price, high/low/average, and trend direction.
 
-用户可能的问法：
-- "竞品最近价格怎么样"
-- "SG 站上盯的几个商品近 2 天价格怎样"
-- "有没有降价的竞品"
+Example user queries:
+- "How are my competitors' prices recently?"
+- "Show me SG site price summary for the last 2 days"
+- "Any products with price drops?"
 
-如果不指定 monitor_id，返回所有活跃监控的摘要。可选指定 site（站点）和 days（天数，默认 3）。
+If monitor_id is omitted, returns summary for all active monitors.
+Optional parameters: site (filter by site), days (default 3).
 """
 
 
@@ -73,15 +75,15 @@ async def get_price_summary(
 # ──────────────────────────────────────────────
 
 PRICE_HISTORY_DESCRIPTION = """\
-获取指定商品的时间序列价格数据，可用于绘制价格趋势图或分析价格变化。
+Get time-series price data for a specific product, useful for trend analysis or charting.
 
-用户可能的问法：
-- "给我看看这个商品近 7 天的价格走势"
-- "iPhone 那个商品的价格变化记录"
-- "帮我画个价格折线图"
-- "MY 站上几个我关注的竞品今天是什么价格，给我看看趋势"
+Example user queries:
+- "Show me the price trend for this product over the last 7 days"
+- "Price change history for the iPhone monitor"
+- "Draw a price line chart"
+- "What are today's prices for my MY site monitors?"
 
-需要提供 monitor_id（必填）。可选 days（默认 7 天，最大 90 天）。
+Requires monitor_id. Optional days (default 7, max 90).
 """
 
 

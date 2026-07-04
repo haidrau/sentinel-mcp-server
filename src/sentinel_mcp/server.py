@@ -1,17 +1,18 @@
 """
-Shopee 盯价哨兵 MCP Server
+Priceminder MCP Server
 
-将 Sentinel REST API 封装为 MCP (Model Context Protocol) Tools，
-让 AI Agent 通过自然语言调用价格监控能力。
+Wraps the Priceminder REST API as MCP (Model Context Protocol) Tools,
+allowing AI agents to interact with Shopee price monitoring capabilities
+via natural language.
 
-支持两种运行模式：
-  - stdio 模式：本地安装，通过标准输入/输出与 AI 客户端通信
-  - http  模式：托管部署，暴露 Streamable HTTP 端点，用户通过 URL+Key 接入
+Supports two run modes:
+  - stdio: Local installation, communicates via stdin/stdout with AI clients
+  - http:  Hosted deployment, exposes a Streamable HTTP endpoint
 
-10 个 Tool:
-  Tier 1 (查询): get_monitor_list, get_price_summary, get_price_history, get_alerts
-  Tier 2 (操作): add_monitor, update_monitor_status, mark_alert_read
-  Tier 3 (洞察): get_crawl_health, get_monitor_overview, search_my_products
+10 Tools:
+  Tier 1 (Query): get_monitor_list, get_price_summary, get_price_history, get_alerts
+  Tier 2 (Action): add_monitor, update_monitor_status, mark_alert_read
+  Tier 3 (Insight): get_crawl_health, get_monitor_overview, search_my_products
 """
 
 from __future__ import annotations
@@ -247,8 +248,8 @@ def run_http():
 
 
 def main():
-    """入口函数：根据命令行参数或环境变量选择运行模式"""
-    parser = argparse.ArgumentParser(description="Shopee 盯价哨兵 MCP Server")
+    """Entry point: choose run mode via CLI arg or env var"""
+    parser = argparse.ArgumentParser(description="Priceminder MCP Server")
     parser.add_argument(
         "--mode",
         choices=["stdio", "http"],
