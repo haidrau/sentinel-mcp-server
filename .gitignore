@@ -17,3 +17,5 @@ docs/
 *.swo
 *~
 .DS_Store
+deploy/
+tests/
