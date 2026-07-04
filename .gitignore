@@ -19,3 +19,4 @@ docs/
 .DS_Store
 deploy/
 tests/
+sync-to-github.sh
