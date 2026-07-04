@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "sentinel-mcp-server"
 version = "0.2.0"
-description = "Shopee 运营哨兵 MCP Server — 让 AI Agent 接入竞品价格监控"
+description = "Shopee 盯价哨兵 MCP Server — 让 AI Agent 接入竞品价格监控"
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.11"

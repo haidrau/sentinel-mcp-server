@@ -75,7 +75,7 @@ python -c "from sentinel_mcp.server import TOOLS; print(f'{len(TOOLS)} tools loa
 mcp_servers:
   # 已有的 MCP servers...
 
-  # 新增：Shopee 运营哨兵
+  # 新增：Shopee 盯价哨兵
   sentinel:
     command: python
     args: ["-m", "sentinel_mcp.server"]

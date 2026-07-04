@@ -1,5 +1,5 @@
 """
-Shopee 运营哨兵 MCP Server
+Shopee 盯价哨兵 MCP Server
 
 将 Sentinel REST API 封装为 MCP (Model Context Protocol) Tools，
 让 AI Agent 通过自然语言调用价格监控能力。
@@ -248,7 +248,7 @@ def run_http():
 
 def main():
     """入口函数：根据命令行参数或环境变量选择运行模式"""
-    parser = argparse.ArgumentParser(description="Shopee 运营哨兵 MCP Server")
+    parser = argparse.ArgumentParser(description="Shopee 盯价哨兵 MCP Server")
     parser.add_argument(
         "--mode",
         choices=["stdio", "http"],

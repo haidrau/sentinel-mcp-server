@@ -1,6 +1,6 @@
 # sentinel-mcp-server
 
-Shopee 运营哨兵 MCP Server — 让 AI Agent 接入竞品价格监控
+Shopee 盯价哨兵 MCP Server — 让 AI Agent 接入竞品价格监控
 
 ---
 
