@@ -5,6 +5,8 @@
 [![MCP](https://img.shields.io/badge/MCP-Model%20Context%20Protocol-purple)](https://modelcontextprotocol.io)
 [![Website](https://img.shields.io/badge/Web-priceminder.online-green)](https://priceminder.online)
 
+[**中文**](README.zh-CN.md) | [English](README.md)
+
 > **Priceminder** — Real-time Shopee competitor price monitoring, powered by AI agents through the Model Context Protocol (MCP).
 
 🌐 **Sign up free**: [priceminder.online](https://priceminder.online)

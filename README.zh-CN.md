@@ -5,6 +5,8 @@
 [![MCP](https://img.shields.io/badge/MCP-Model%20Context%20Protocol-purple)](https://modelcontextprotocol.io)
 [![Website](https://img.shields.io/badge/Web-priceminder.online-green)](https://priceminder.online)
 
+[**English**](README.md) | [中文](README.zh-CN.md)
+
 > **盯价哨兵** — 基于 MCP（Model Context Protocol）协议的 Shopee 竞品价格实时监控 AI 工具。让 AI 助手帮你盯住东南亚电商对手的一举一动。
 
 官网：[**priceminder.online**](https://priceminder.online) → 免费注册，立即开始监控
