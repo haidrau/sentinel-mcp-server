@@ -72,6 +72,7 @@ async def verify_key(key: str) -> dict | None:
         "token": data["sentinel_token"],
         "user_id": data["user_id"],
         "client_type": data.get("client_type", "seller"),
+        "tier": data.get("tier", "free"),
     }
 
     # 写入缓存（限制大小）
