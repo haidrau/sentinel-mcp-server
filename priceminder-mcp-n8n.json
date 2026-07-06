@@ -1,0 +1,204 @@
+{
+  "name": "Priceminder — Shopee Price Monitor (n8n Template)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "trigger-schedule",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:8082/mcp",
+        "options": {}
+      },
+      "id": "mcp-get-summary",
+      "name": "Get Price Summary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [450, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8082/mcp",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "jsonrpc",
+              "value": "2.0"
+            },
+            {
+              "name": "method",
+              "value": "tools/call"
+            },
+            {
+              "name": "params",
+              "value": "={ \"name\": \"get_price_summary\", \"arguments\": {} }"
+            },
+            {
+              "name": "id",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse MCP response into a readable summary\nconst body = $input.first().json;\n\nif (!body || !body.result || !body.result.content) {\n  return [{ json: { alert: 'No price data returned from MCP server' } }];\n}\n\nconst content = body.result.content;\nlet text = '';\nfor (const item of content) {\n  if (item.text) text += item.text;\n}\n\n// Extract price drops from the summary\nconst lines = text.split('\\n');\nconst drops = lines.filter(l =>\n  l.toLowerCase().includes('drop') ||\n  l.toLowerCase().includes('decrease') ||\n  l.includes('↓')\n);\n\nreturn [{\n  json: {\n    raw_summary: text,\n    price_drops: drops,\n    drop_count: drops.length,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "code-parse",
+      "name": "Parse Price Drops",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "0f1e2d3c-4b5a-6789-0abc-def012345678",
+              "leftValue": "={{ $json.drop_count }}",
+              "rightValue": "=0",
+              "operator": {
+                "type": "number",
+                "operation": "larger"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "if-has-drops",
+      "name": "Has Price Drops?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const drops = $input.first().json.price_drops;\nconst raw = $input.first().json.raw_summary;\n\nconst message = `🚨 Priceminder Alert\n━━━━━━━━━━━━━━━━\n${drops.length > 0 ? drops.join('\\n') : 'No price drops detected.'}\n\n${raw.substring(0, 2000)}`;\n\nreturn [{ json: { message } }];"
+      },
+      "id": "format-telegram",
+      "name": "Format Notification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "const drops = $input.first().json.price_drops;\nconst raw = $input.first().json.raw_summary;\n\nconst message = `🚨 *Priceminder Price Drop Alert*\n━━━━━━━━━━━━━━━━━━\n${drops.length > 0 ? drops.join('\\n') : 'No drops detected.'}\n\n${raw.substring(0, 1000)}`;\n\nreturn [{ json: { message } }];"
+      },
+      "id": "format-email",
+      "name": "Format Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 400]
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "id": "telegram-send",
+      "name": "Send Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [1250, 200],
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "priceminder@yourdomain.com",
+        "toEmail": "you@example.com",
+        "subject": "🚨 Priceminder — Price Drop Alert",
+        "text": "={{ $json.message }}"
+      },
+      "id": "email-send",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [1250, 400],
+      "parameters": {}
+    },
+    {
+      "parameters": {
+        "jsCode": "const drops = $input.first().json.price_drops;\nconst raw = $input.first().json.raw_summary;\n\nreturn [{ \n  json: { \n    alert: 'No price drops detected this cycle. Everything stable.',\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "code-no-drops",
+      "name": "No Drops (Log Only)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 600]
+    }
+  ],
+  "connections": {
+    "trigger-schedule": {
+      "main": [
+        [{ "node": "mcp-get-summary", "type": "main", "index": 0 }]
+      ]
+    },
+    "mcp-get-summary": {
+      "main": [
+        [{ "node": "code-parse", "type": "main", "index": 0 }]
+      ]
+    },
+    "code-parse": {
+      "main": [
+        [{ "node": "if-has-drops", "type": "main", "index": 0 }]
+      ]
+    },
+    "if-has-drops": {
+      "main": [
+        [
+          { "node": "format-telegram", "type": "main", "index": 0 },
+          { "node": "format-email", "type": "main", "index": 0 }
+        ],
+        [{ "node": "code-no-drops", "type": "main", "index": 0 }]
+      ]
+    },
+    "format-telegram": {
+      "main": [
+        [{ "node": "telegram-send", "type": "main", "index": 0 }]
+      ]
+    },
+    "format-email": {
+      "main": [
+        [{ "node": "email-send", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "priceminder-mcp-v1"
+}

@@ -11,14 +11,30 @@
 
 🌐 **Sign up free**: [priceminder.online](https://priceminder.online)
 
-Monitor competitor prices across Shopee Southeast Asia (SG, MY, TH, VN). Let your AI agent track, analyze, and alert on price movements — all through natural language.
+Monitor competitor prices across Shopee Southeast Asia (SG, MY, TH, VN, ID, PH). Let your AI agent track, analyze, and alert on price movements — all through natural language.
+
+---
+
+## 📊 Why Priceminder?
+
+**Real-time, not yesterday.** Most price monitoring tools — including alternative MCP servers — return T-1 (yesterday's cached) data. Priceminder crawls prices **3 times daily**, giving you near-real-time visibility.
+
+| Capability | Other MCP Servers | Priceminder |
+|---|---|---|
+| **Data freshness** | T-1 (yesterday) | **T-0 (same-day, 3× daily)** |
+| **Price change detection** | Next day | **Within 4–8 hours** |
+| **Flash sale / 9.9 / 11.11** | Misses intra-day moves | **Catches hourly adjustments** |
+| **Push notifications** | ❌ Query-only | ✅ Feishu/DingTalk/Telegram |
+| **Self-hosted** | ✅ Supported | ✅ Supported |
+
+**In short:** If you're using other tools, you're making decisions on yesterday's data. Priceminder tells you what's happening **right now** — and pushes alerts when competitors move.
 
 ---
 
 ## 🌟 Features
 
 | # | Tool | Description | Tier |
-|---|------|-------------|------|
+|---|---|---|---|
 | 1 | `get_monitor_list` | List all products you're tracking | 🔍 Query |
 | 2 | `get_price_summary` | Price summary across all tracked products (batch mode) | 🔍 Query |
 | 3 | `get_price_history` | Time-series price data for a specific product | 🔍 Query |
@@ -39,7 +55,7 @@ Monitor competitor prices across Shopee Southeast Asia (SG, MY, TH, VN). Let you
 Just add this URL to any MCP-compatible client:
 
 ```
-https://priceminder.online/mcp_server?key=YOUR_MCP_KEY
+https://priceminder.online/mcp_server?key=***
 ```
 
 **Step 1: Get your MCP Key**
@@ -48,34 +64,43 @@ https://priceminder.online/mcp_server?key=YOUR_MCP_KEY
 
 **Step 2: Configure your AI client**
 
-For **Claude Desktop / Cursor / Cherry Studio**:
+**Claude Desktop / Cursor / Cherry Studio:**
 
 ```json
 {
   "mcpServers": {
     "priceminder": {
       "type": "http",
-      "url": "https://priceminder.online/mcp_server?key=YOUR_MCP_KEY"
+      "url": "https://priceminder.online/mcp_server?key=***"
     }
   }
 }
 ```
 
-For **Claude Code**:
+**Claude Code:**
 
 ```bash
-claude mcp add priceminder --type http --url "https://priceminder.online/mcp_server?key=YOUR_MCP_KEY"
+claude mcp add priceminder --type http --url "https://priceminder.online/mcp_server?key=***"
 ```
 
-### Option B: Self-Hosted (Docker)
+### Option B: Self-Hosted (Docker — One Command)
+
+```bash
+bash docker-run.sh YOUR_SENTINEL_TOKEN
+```
+
+The script handles image pull, container lifecycle, health check, and logs everything. See [`docker-run.sh`](docker-run.sh) for details.
+
+Or run directly:
 
 ```bash
 docker run -d \
   --name priceminder-mcp \
+  --restart unless-stopped \
   -p 8082:8082 \
-  -e SENTINEL_API_BASE=https://priceminder.online/shopee \
   -e SENTINEL_TOKEN=YOUR_SENTINEL_TOKEN \
   -e SENTINEL_API_KEY=sentinel-mvp-2026 \
+  -e SENTINEL_API_BASE=https://priceminder.online/shopee \
   ghcr.io/haidrau/sentinel-mcp-server:latest
 ```
 
@@ -92,6 +117,75 @@ sentinel-mcp-server
 export SENTINEL_TOKEN=YOUR_SENTINEL_TOKEN
 sentinel-mcp-server --mode http
 ```
+
+---
+
+## 💬 Prompt Scenarios
+
+Once configured, here are **3 real-world scenarios** you can run — each demonstrating a different use case:
+
+### 1️⃣ Store-Level Price Watch
+
+> *"Monitor all products from Shopee store 'ABC Official Store' on Shopee SG. If any product drops more than 5% in the last 24 hours, summarize the changes."*
+
+Your AI agent will:
+1. Add each product from the store to your monitor list
+2. Cross-reference prices against the latest crawl
+3. Return a summary of SKUs that dropped below the 5% threshold
+
+**Best for:** Brand competition — keep tabs on a specific competitor's entire catalog.
+
+### 2️⃣ Flash Sale / Campaign Alert
+
+> *"Check every 4 hours during the 7.7 sale — alert me if any of my tracked products have a price change of 3% or more. Show only the products that changed."*
+
+Your AI agent will:
+1. Call `get_price_summary` to get current vs previous prices
+2. Filter for products with ≥3% movement
+3. Present a clean before/after comparison
+
+**Best for:** Campaign periods — don't wake up to yesterday's data when competitors adjust prices hourly.
+
+### 3️⃣ Price Drop Intelligence
+
+> *"Show me all price drop alerts from the last 2 days. Which products dropped the most? Highlight any drops over 10%."*
+
+Your AI agent will:
+1. Call `get_alerts` for recent notifications
+2. Call `get_price_history` on the biggest movers for deeper context
+3. Rank by drop percentage and highlight critical moves
+
+**Best for:** Buying decisions — spot the deepest discounts and cheapest time to restock.
+
+---
+
+## 🔗 n8n Integration
+
+Priceminder ships with a ready-to-import n8n workflow template.
+
+**File:** [`priceminder-mcp-n8n.json`](priceminder-mcp-n8n.json)
+
+### What it does
+
+The template sets up an automated price watchdog on a 4-hour cron:
+
+```
+Schedule ─► Get Price Summary ─► Parse Drops ─► Has Drops? ─┬► Telegram Alert
+(4h cron)                                                     ├► Email Alert
+                                                              └► Log (no drops)
+```
+
+### Import
+
+1. Open n8n → **Workflows** → **Import from File**
+2. Select `priceminder-mcp-n8n.json`
+3. Configure your credentials:
+   - `SENTINEL_TOKEN` (set as env var on the n8n host)
+   - Telegram bot token + chat ID (if using Telegram output)
+   - SMTP credentials (if using Email output)
+4. **Activate** the workflow
+
+> 💡 The MCP HTTP node connects to `http://localhost:8082/mcp` — make sure your Docker container is running on the same machine as n8n, or update the URL accordingly.
 
 ---
 
@@ -139,7 +233,7 @@ sentinel-mcp-server --mode http
 ### Environment Variables
 
 | Variable | Description | Default |
-|----------|-------------|---------|
+|---|---|---|
 | `SENTINEL_API_BASE` | Backend API base URL | `https://priceminder.online/shopee` |
 | `SENTINEL_TOKEN` | Your authentication token | **(required)** |
 | `SENTINEL_API_KEY` | API key for backend auth | `sentinel-mvp-2026` |
@@ -148,26 +242,6 @@ sentinel-mcp-server --mode http
 | `MCP_HOST` | HTTP server bind address | `127.0.0.1` |
 | `MCP_PORT` | HTTP server port | `8082` |
 | `LOG_LEVEL` | Log level | `INFO` |
-
----
-
-## 💬 Usage Examples
-
-Once configured, you can ask your AI agent things like:
-
-**Price monitoring:**
-- "Show me my tracked products on Shopee SG"
-- "What's the price trend for the iPhone 14 I'm monitoring?"
-- "Has any competitor dropped prices in the last 3 days?"
-
-**Adding products:**
-- "Track this product: https://shopee.sg/product-123"
-- "Add this Samsung TV to my watchlist"
-
-**Alerts & insights:**
-- "Any new price drop alerts?"
-- "How's the crawler system running today?"
-- "Give me a dashboard overview"
 
 ---
 
@@ -193,7 +267,7 @@ curl -X POST https://priceminder.online/shopee/mcp/generate-key \
 ### Verify MCP Key (MCP Server Internal)
 
 ```bash
-curl https://priceminder.online/shopee/mcp/verify-key?key=YOUR_MCP_KEY \
+curl https://priceminder.online/shopee/mcp/verify-key?key=*** \
   -H "X-MCP-Internal-Key: sentinel-mcp-internal-2026"
 ```
 
@@ -202,7 +276,7 @@ curl https://priceminder.online/shopee/mcp/verify-key?key=YOUR_MCP_KEY \
 ## 🆓 Free vs Pro
 
 | Feature | Free | Pro |
-|---------|------|-----|
+|---|---|---|
 | Active monitors | 5 max | Unlimited |
 | Price history | 3 days | 90 days |
 | Price summary | 3 days | 90 days |
