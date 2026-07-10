@@ -17,10 +17,10 @@ Monitor competitor prices across Shopee Southeast Asia (SG, MY, TH, VN, ID, PH).
 
 ## 📌 Important: Understand the Data Pipeline First
 
-Priceminder's MCP service **does not work standalone**. It depends on real competitor price data collected by the browser extension. Please understand this 3-layer pipeline before using:
+Priceminder's MCP service **does not work standalone**. It depends on competitor price data obtained through paid third-party API data services. Please understand this 3-layer pipeline before using:
 
 ```
-Install Extension → Browse Shopee & Click "Monitor" → Data Stored → AI Can Query
+Install Extension → Follow products you want to watch → Backend fetches data via paid APIs → AI Can Query
 ```
 
 ### ⚠️ Prerequisites
@@ -47,7 +47,7 @@ Priceminder's MCP tools can **only query products you've manually added to your 
 | Add new products to monitor (requires extension scan first) | Auto-discover new competitors |
 | Check crawler engine health status | Modify my account password or settings |
 
-**In short: The extension collects the data, MCP lets AI analyze what you've already collected.**
+**In short: You tell the system which competitors to watch, MCP lets AI analyze what's been collected.**
 
 For full capability details, see the [**MCP Tools Overview →**](https://priceminder.online/docs/tools/overview)
 
@@ -271,10 +271,10 @@ Schedule ─► Get Price Summary ─► Parse Drops ─► Has Drops? ─┬►
 ### Data Flow
 
 ```
-① Browser extension collects data
+① User selects products to monitor via extension
       │
       ▼
-② Backend API stores → PostgreSQL
+② Backend fetches real-time prices via paid third-party API data services → PostgreSQL
       │
       ▼
 ③ MCP Server reads via API
@@ -283,7 +283,7 @@ Schedule ─► Get Price Summary ─► Parse Drops ─► Has Drops? ─┬►
 ④ AI client queries via MCP protocol
 ```
 
-**Key point:** Data flows one way — extension collects → backend stores → MCP reads. AI clients cannot write data without the extension.
+**Key point:** Data flows one way — user selects products → backend fetches via paid APIs → MCP reads. The extension only tells the system which products to watch.
 
 ---
 
