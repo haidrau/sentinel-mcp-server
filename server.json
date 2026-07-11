@@ -1,0 +1,55 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.haidrau/sentinel-mcp-server",
+  "description": "⚠️ Real-time Shopee competitor price monitoring via MCP. Does NOT work standalone — requires browser extension + monitored products + MCP Key.\n\nT-0 (same-day, 3× daily) price data covering Shopee SG/MY/TH/VN/ID/PH. Push notifications via Feishu/DingTalk/Telegram. 8 MCP tools for querying, monitoring, and analyzing competitor price movements.",
+  "repository": {
+    "url": "https://github.com/haidrau/sentinel-mcp-server",
+    "source": "github"
+  },
+  "version": "0.2.0",
+  "packages": [
+    {
+      "registryType": "docker",
+      "identifier": "ghcr.io/haidrau/sentinel-mcp-server",
+      "transport": {
+        "type": "http",
+        "url": "https://priceminder.online/mcp_server?key=YOUR_KEY",
+        "headers": {
+          "required": ["X-Api-Key", "X-Sentinel-Token"],
+          "documentation": "https://priceminder.online/docs/clients"
+        }
+      }
+    }
+  ],
+  "environmentVariables": [
+    {
+      "name": "SENTINEL_TOKEN",
+      "description": "Your Sentinel MCP Key. Get it from the browser extension settings page (NOT from the website login). See: https://priceminder.online/docs/quick-start",
+      "isRequired": true,
+      "isSecret": true,
+      "format": "string"
+    },
+    {
+      "name": "SENTINEL_API_KEY",
+      "description": "Internal API key for backend communication",
+      "isRequired": true,
+      "isSecret": true,
+      "format": "string",
+      "default": "sentinel-mvp-2026"
+    }
+  ],
+  "prompts": [
+    {
+      "name": "store-level-watch",
+      "description": "Monitor all products from a specific Shopee store and alert on price drops over 5%"
+    },
+    {
+      "name": "flash-sale-alert",
+      "description": "Check every 4 hours during campaign period for price changes over 3%"
+    },
+    {
+      "name": "price-drop-intelligence",
+      "description": "Deep dive into recent price drops and highlight the biggest movers"
+    }
+  ]
+}
