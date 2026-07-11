@@ -18,6 +18,9 @@ ENV MCP_HOST=0.0.0.0
 ENV MCP_PORT=8082
 ENV LOG_LEVEL=INFO
 
+# MCP Registry ownership verification label
+LABEL io.modelcontextprotocol.server.name="io.github.haidrau/sentinel-mcp-server"
+
 EXPOSE 8082
 
 # 健康检查
