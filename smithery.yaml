@@ -1,0 +1,134 @@
+# Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
+
+name: sentinel-mcp-server
+displayName: Priceminder MCP Server
+description: >
+  ⚠️ Real-time Shopee competitor price monitoring via MCP.
+  Does NOT work standalone. Requires: (1) browser extension to add products,
+  (2) MCP Key from extension settings, (3) products already in monitoring list.
+
+  T-0 (same-day, 3× daily) price data. Shopee SG/MY/TH/VN/ID/PH.
+  Push notifications: Feishu/DingTalk/Telegram.
+
+  See README prerequisites before using:
+  https://github.com/haidrau/sentinel-mcp-server#important-understand-the-data-pipeline-first
+
+version: 0.2.0
+author: haidrau
+license: MIT
+repository: https://github.com/haidrau/sentinel-mcp-server
+homepage: https://priceminder.online
+category: Data & Analytics
+
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    required:
+      - sentinelToken
+    properties:
+      sentinelToken:
+        type: string
+        description: >
+          Your Sentinel MCP Key. Get it from the browser extension settings page
+          (NOT from the website login). See: https://priceminder.online/docs/quick-start
+        secret: true
+      logLevel:
+        type: string
+        enum: [DEBUG, INFO, WARNING, ERROR]
+        default: INFO
+        description: Log level for the server
+  commandFunction: |-
+    config => ({
+      command: 'python',
+      args: ['-m', 'sentinel_mcp.server', '--mode', 'stdio'],
+      env: {
+        SENTINEL_API_BASE: 'https://priceminder.online/shopee',
+        SENTINEL_API_KEY: 'sentinel-mvp-2026',
+        SENTINEL_TOKEN: config.sentinelToken,
+        LOG_LEVEL: config.logLevel || 'INFO'
+      }
+    })
+
+installation:
+  type: pip
+  package: sentinel-mcp-server
+  requirements:
+    - mcp>=1.8.0
+    - httpx>=0.27.0
+    - uvicorn[standard]>=0.30.0
+
+capabilities:
+  get_monitor_list:
+    description: List all products currently being monitored
+    alwaysAllow: true
+  get_price_summary:
+    description: Batch price summary across all tracked products
+    alwaysAllow: true
+  get_price_history:
+    description: Price history time-series for a specific product
+    alwaysAllow: true
+  get_alerts:
+    description: List price drop alerts and push records
+    alwaysAllow: true
+  add_monitor:
+    description: Add a new product to your monitor list
+    alwaysAllow: false
+  update_monitor_status:
+    description: Pause or resume monitoring for a product
+    alwaysAllow: false
+  get_crawl_health:
+    description: Check crawler engine health and statistics
+    alwaysAllow: true
+  get_monitor_overview:
+    description: Dashboard overview of all monitors
+    alwaysAllow: true
+
+documentation:
+  prerequisites: |
+    📌 CRITICAL: This MCP server does NOT work standalone.
+
+    Complete data pipeline:
+      Install Extension → Follow products → Backend fetches via paid APIs → AI Can Query
+
+    Required steps BEFORE using MCP:
+    1. Install the browser extension (Chrome/Edge/360)
+    2. Browse Shopee product pages, click "Monitor Now"
+    3. Get your MCP Key from the extension settings page
+    4. Configure your AI client with the URL and Key
+
+    🔑 MCP Key is ONLY in the extension settings. Website login does NOT provide it.
+    The extension only tells the system which products to watch — data collection
+    is done by paid third-party API data services.
+
+    AI can ONLY query products already added to monitoring.
+  usage: |
+    Test your setup with these prompts:
+
+    - "What am I monitoring?" → get_monitor_list
+    - "How are my competitors' prices?" → get_price_summary
+    - "Any new price drop alerts?" → get_alerts
+    - "Is the crawler healthy?" → get_crawl_health
+
+    💬 Real-world scenarios:
+
+    1️⃣ Store-Level Price Watch
+      "Monitor all products from Shopee store 'ABC Official Store' on Shopee SG.
+      If any product drops more than 5% in the last 24 hours, summarize changes."
+
+    2️⃣ Flash Sale Alert
+      "Check every 4 hours during the 7.7 sale — alert me if any tracked product
+      has a price change of 3% or more."
+
+    3️⃣ Price Drop Intelligence
+      "Show me all price drop alerts from the last 2 days. Which products dropped
+      the most? Highlight any drops over 10%."
+
+    Full docs: https://priceminder.online/docs
+
+compatibility:
+  os:
+    - linux
+    - macos
+    - windows
+  python: ">=3.11"
